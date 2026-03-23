@@ -3,6 +3,7 @@ import {
     text,
     timestamp,
     boolean,
+    pgEnum,
 } from "drizzle-orm/pg-core";
 
 // ─── better-auth required tables ───────────────────────────────────────────
@@ -55,4 +56,30 @@ export const verification = pgTable("verification", {
     expiresAt: timestamp("expires_at").notNull(),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// ─── Meeting status enum ───────────────────────────────────────────────────
+
+export const meetingStatusEnum = pgEnum("meeting_status", [
+    "calling",
+    "active",
+    "ended",
+    "declined",
+    "missed",
+]);
+
+// ─── Meetings table ────────────────────────────────────────────────────────
+
+export const meetings = pgTable("meetings", {
+    id: text("id").primaryKey(), // UUID we generate = Stream call ID
+    hostId: text("host_id")
+        .notNull()
+        .references(() => user.id, { onDelete: "cascade" }),
+    inviteeId: text("invitee_id")
+        .notNull()
+        .references(() => user.id, { onDelete: "cascade" }),
+    status: meetingStatusEnum("status").notNull().default("calling"),
+    startedAt: timestamp("started_at"),
+    endedAt: timestamp("ended_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
 });
